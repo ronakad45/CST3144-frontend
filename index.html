@@ -21,6 +21,21 @@
                 </button>
             </div>
         </header>
+
+         <div class="lessons-grid">
+                <div v-for="lesson in sortedLessons" :key="lesson.id" class="lesson-card">
+                    <div class="lesson-icon">
+                        <i :class="lesson.icon"></i>
+                    </div>
+                    <h3>{{ lesson.subject }}</h3>
+                    <div class="lesson-info">
+                        <i class="fas fa-map-marker-alt"></i>
+                        <span>{{ lesson.location }}</span>
+                    </div>
+                    <div class="price">AED {{ lesson.price }}</div>
+                </div>
+            </div>
+
     </div>
 
      <script>
