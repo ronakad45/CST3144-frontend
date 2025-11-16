@@ -22,3 +22,78 @@ h1 {
     color: #333;
     margin-bottom: 15px;
 }
+
+.lessons-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 20px;
+    margin-bottom: 20px;
+}
+
+.lesson-card {
+    background: white;
+    padding: 20px;
+    border: 1px solid #ddd;
+}
+
+.lesson-icon {
+    font-size: 40px;
+    color: #293241;
+    margin-bottom: 10px;
+}
+
+.lesson-card h3 {
+    color: #333;
+    margin-bottom: 10px;
+}
+
+.lesson-info {
+    margin: 8px 0;
+    color: #666;
+    font-size: 14px;
+}
+
+.lesson-info i {
+    margin-right: 5px;
+    color: #293241;
+}
+
+.price {
+    font-size: 20px;
+    color: #4CAF50;
+    font-weight: bold;
+    margin: 10px 0;
+}
+
+.rating {
+    color:#333;
+    margin: 10px 0;
+}
+.star{
+    color: yellow;
+}
+
+.rating-text{
+    color: #333;
+}
+
+.spaces {
+    color: #f44336;
+    font-weight: bold;
+}
+
+.add-to-cart-btn {
+    width: 100%;
+    padding: 10px;
+    background: #2196F3;
+    color: white;
+    border: none;
+    cursor: pointer;
+    font-size: 14px;
+    margin-top: 10px;
+}
+
+.add-to-cart-btn:disabled {
+    background: #ccc;
+    cursor: not-allowed;
+}
