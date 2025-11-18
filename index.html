@@ -14,7 +14,7 @@
             <h1><i class="fas fa-graduation-cap"></i> After School Lessons</h1>
             <div class="header-controls">
                 <input v-model="searchQuery" type="text" placeholder="Search lessons." class="search-box">
-                <button class="cart-button" v-on:click="changeCart" :disabled="cart.length === 0">
+                <button class="cart-button" v-on:click="changePages" :disabled="cart.length === 0">
                     <i class="fas fa-shopping-cart"></i>
                     Cart
                     <span v-if="cart.length > 0" class="cart-badge">{{ cartItemCount }}</span>
@@ -22,48 +22,65 @@
             </div>
         </div>
 
-        <div class="sort-controls">
-            <label>Sort by:</label>
-            <select v-model="sortAttributes">
-                <option value="subject">Subject</option>
-                <option value="location">Location</option>
-                <option value="price">Price</option>
-                <option value="spaces">Availability</option>
-            </select>
+
+        <div v-if="!showCart">
+            <div class="sort-controls">
+                <label>Sort by:</label>
+                <select v-model="sortAttributes">
+                    <option value="subject">Subject</option>
+                    <option value="location">Location</option>
+                    <option value="price">Price</option>
+                    <option value="spaces">Availability</option>
+                </select>
                 
-            <label>Order:</label>
-            <select v-model="sortOrders">
-                <option value="asc">Ascending</option>
-                <option value="desc">Descending</option>
-            </select>
+                <label>Order:</label>
+                <select v-model="sortOrders">
+                    <option value="asc">Ascending</option>
+                    <option value="desc">Descending</option>
+                </select>
+            </div>
+            <div class="lessons-grid">
+                <div v-for="lesson in sortedLessons" :key="lesson.id" class="lesson-card">
+                    <div class="lesson-icon">
+                        <i :class="lesson.icon"></i>
+                    </div>
+                    <h3>{{ lesson.subject }}</h3>
+                    <div class="lesson-info">
+                        <i class="fas fa-map-marker-alt"></i>
+                        <span>{{ lesson.location }}</span>
+                    </div>
+                    <div class="price">AED {{ lesson.price }}</div>
+                    <div class="rating">
+                        <i class="fas fa-star star" v-for="n in lesson.rating" :key="n"></i>
+                        <i class="far fa-star star" v-for="n in (5 - lesson.rating)" :key="n + 10"></i>
+                        ({{ lesson.rating }}/5)
+                    </div>
+                    <div class="lesson-info spaces">
+                        <i class="fas fa-users"></i>
+                        <span>{{ lesson.spaces }} spaces available</span>
+                    </div>
+                    <button class="add-to-cart-btn" v-on:click="addToCart(lesson)" :disabled="lesson.spaces === 0">
+                        <i class="fas fa-cart-plus"></i> 
+                        {{ lesson.spaces === 0 ? 'Sold Out' : 'Add to Cart' }}
+                    </button>
+                </div>
+            </div>
         </div>
 
-        <div class="lessons-grid">
-            <div v-for="lesson in sortedLessons" :key="lesson.id" class="lesson-card">
-                <div class="lesson-icon">
-                    <i :class="lesson.icon"></i>
+        <div v-else class="cart-page">
+            <h2><i class="fas fa-shopping-cart"></i> Shopping Cart</h2>
+            <div v-for="item in cart" :key="item.id" class="cart-item">
+                <div class="cart-item-info">
+                    <h4>{{ item.subject }}</h4>
+                    <p>{{ item.location }} - AED {{ item.price }}</p>
+                    <p>Quantity: {{ item.quantity }}</p>
                 </div>
-                <h3>{{ lesson.subject }}</h3>
-                <div class="lesson-info">
-                    <i class="fas fa-map-marker-alt"></i>
-                    <span>{{ lesson.location }}</span>
-                </div>
-                <div class="price">AED {{ lesson.price }}</div>
-                <div class="rating">
-                    <i class="fas fa-star star" v-for="n in lesson.rating" :key="n"></i>
-                    <i class="far fa-star star" v-for="n in (5 - lesson.rating)" :key="n + 10"></i>
-                    ({{ lesson.rating }}/5)
-                </div>
-                <div class="lesson-info spaces">
-                    <i class="fas fa-users"></i>
-                    <span>{{ lesson.spaces }} spaces available</span>
-                </div>
-                <button class="add-to-cart-btn" v-on:click="addToCart(lesson)" :disabled="lesson.spaces === 0">
-                    <i class="fas fa-cart-plus"></i> 
-                    {{ lesson.spaces === 0 ? 'Sold Out' : 'Add to Cart' }}
+                <button class="remove-btn" v-on:click="removeFromCart(item)">
+                    <i class="fas fa-trash"></i> Remove
                 </button>
             </div>
         </div>
+
             
     </div>
 
@@ -145,6 +162,19 @@
                         
                         lesson.spaces--;
                     }
+                },
+                removeFromCart(item) {
+                    const lesson = this.lessons.find(l => l.id === item.id);
+                    if (lesson) {
+                        lesson.spaces += item.quantity;
+                    }
+                    const index = this.cart.findIndex(i => i.id === item.id);
+                    if (index > -1) {
+                        this.cart.splice(index, 1);
+                    }
+                },
+                changePages() {
+                    this.showCart = !this.showCart;
                 },
             }
         });
