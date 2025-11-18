@@ -14,13 +14,28 @@
             <h1><i class="fas fa-graduation-cap"></i> After School Lessons</h1>
             <div class="header-controls">
                 <input v-model="searchQuery" type="text" placeholder="Search lessons." class="search-box">
-                <button class="cart-button" v-on:click="toggleCart" :disabled="cart.length === 0">
+                <button class="cart-button">
                     <i class="fas fa-shopping-cart"></i>
                     Cart
-                    <span v-if="cart.length > 0" class="cart-badge">{{ cartItemCount }}</span>
                 </button>
             </div>
         </header>
+
+        <div class="sort-controls">
+            <label>Sort by:</label>
+            <select v-model="sortAttributes">
+                <option value="subject">Subject</option>
+                <option value="location">Location</option>
+                <option value="price">Price</option>
+                <option value="spaces">Availability</option>
+            </select>
+                
+            <label>Order:</label>
+            <select v-model="sortOrders">
+                <option value="asc">Ascending</option>
+                <option value="desc">Descending</option>
+            </select>
+        </div>
 
         <div class="lessons-grid">
             <div v-for="lesson in sortedLessons" :key="lesson.id" class="lesson-card">
@@ -71,9 +86,32 @@
                 cart: [],
                 showCart: false,
                 searchQuery: '',
-                sortAttribute: 'subject',
-                sortOrder: 'asc',
+                sortAttributes: 'subject', // will sort by 'subject' by default
+                sortOrders: 'asc', //will sort by ascending by default 
             },
+            computed:{
+                sortedLessons() {
+                    const lessons = [...this.filteredLessons];
+                    
+                    lessons.sort((a, b) => {
+                        let aVal = a[this.sortAttribute];
+                        let bVal = b[this.sortAttribute];
+                        
+                        if (typeof aVal === 'string') {
+                            aVal = aVal.toLowerCase();
+                            bVal = bVal.toLowerCase();
+                        }
+                        
+                        if (this.sortOrder === 'asc') {
+                            return aVal > bVal ? 1 : -1;
+                        } else {
+                            return aVal < bVal ? 1 : -1;
+                        }
+                    });
+                
+                    return lessons;
+                },
+            }
         });
     </script>
 </body>
