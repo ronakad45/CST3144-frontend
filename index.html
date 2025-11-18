@@ -10,16 +10,17 @@
 </head>
 <body>
     <div id="app">
-        <header>
+        <div class="header">
             <h1><i class="fas fa-graduation-cap"></i> After School Lessons</h1>
             <div class="header-controls">
                 <input v-model="searchQuery" type="text" placeholder="Search lessons." class="search-box">
-                <button class="cart-button">
+                <button class="cart-button" v-on:click="changeCart" :disabled="cart.length === 0">
                     <i class="fas fa-shopping-cart"></i>
                     Cart
+                    <span v-if="cart.length > 0" class="cart-badge">{{ cartItemCount }}</span>
                 </button>
             </div>
-        </header>
+        </div>
 
         <div class="sort-controls">
             <label>Sort by:</label>
@@ -57,9 +58,9 @@
                     <i class="fas fa-users"></i>
                     <span>{{ lesson.spaces }} spaces available</span>
                 </div>
-                <button class="add-to-cart-btn">
+                <button class="add-to-cart-btn" v-on:click="addToCart(lesson)" :disabled="lesson.spaces === 0">
                     <i class="fas fa-cart-plus"></i> 
-                    add to cart
+                    {{ lesson.spaces === 0 ? 'Sold Out' : 'Add to Cart' }}
                 </button>
             </div>
         </div>
@@ -124,6 +125,26 @@
                                lesson.price.toString().includes(query) ||
                                lesson.spaces.toString().includes(query);
                     });
+                },
+            },
+            methods: {
+                addToCart(lesson) {
+                    if (lesson.spaces > 0) {
+                        const cartItem = this.cart.find(item => item.id === lesson.id);
+                        if (cartItem) {
+                            cartItem.quantity++;
+                        } else {
+                            this.cart.push({
+                                id: lesson.id,
+                                subject: lesson.subject,
+                                location: lesson.location,
+                                price: lesson.price,
+                                quantity: 1
+                            });
+                        }
+                        
+                        lesson.spaces--;
+                    }
                 },
             }
         });
