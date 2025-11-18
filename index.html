@@ -91,7 +91,7 @@
             },
             computed:{
                 sortedLessons() {
-                    const lessons = [...this.filteredLessons];
+                    const lessons = [...this.filteredLessons]; // this takes filtered + sorted list
                     
                     lessons.sort((a, b) => {
                         let aVal = a[this.sortAttribute];
@@ -110,6 +110,20 @@
                     });
                 
                     return lessons;
+                },
+                filteredLessons() {
+                // It returns sorted lessons array 
+                //implements it in the search and filters lessons based on searchQuery
+                    if (!this.searchQuery) {
+                        return this.lessons;
+                    }
+                    const query = this.searchQuery.toLowerCase();
+                    return this.lessons.filter(lesson => {
+                        return lesson.subject.toLowerCase().includes(query) ||
+                               lesson.location.toLowerCase().includes(query) ||
+                               lesson.price.toString().includes(query) ||
+                               lesson.spaces.toString().includes(query);
+                    });
                 },
             }
         });
