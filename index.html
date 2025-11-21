@@ -84,9 +84,9 @@
                 <h3>Checkout</h3>
                     <div class="form-group">
                         <label>Full Name (letters only):</label>
-                        <input v-model="order.customerName" type="text" placeholder="Enter your name">
+                        <input v-model="order.customerName" type="text" placeholder="Enter your name":class="{ valid: isNameValid, invalid: order.customerName && !isNameValid }">
                         <label>Phone Number (numbers only):</label>
-                        <input v-model="order.customerPhone" type="text" placeholder="Enter your phone number">
+                        <input v-model="order.customerPhone" type="text" placeholder="Enter your phone number":class="{ valid: isPhoneValid, invalid: order.customerPhone && !isPhoneValid }">
                     
                         <label>Address:</label>
                         <input v-model="order.address" type="text" placeholder="Enter your address">
@@ -110,6 +110,9 @@
                             <input type="checkbox" id="gift" v-model="order.gift">
                             <label for="gift" style="display: inline;">Ship As Gift?</label>
                         </div>
+                        <button class="checkout-btn">
+                            <i class="fas fa-check-circle"></i> Complete Order
+                        </button>
                     </div>
             </div>
         </div>
@@ -187,6 +190,21 @@
                                lesson.spaces.toString().includes(query);
                     });
                 },
+                isNameValid() {
+                    return /^[A-Za-z\s]+$/.test(this.order.customerName) && this.order.customerName.trim().length > 0;
+                },
+                isPhoneValid() {
+                    return /^[0-9]+$/.test(this.order.customerPhone) && this.order.customerPhone.length > 0;
+                },
+                isCheckoutEnabled() {
+                    return this.isNameValid && 
+                           this.isPhoneValid && 
+                           this.order.address.trim() && 
+                           this.order.city.trim() && 
+                           this.order.emirate && 
+                           this.order.zip.trim() && 
+                           this.cart.length > 0;
+                }
             },
             methods: {
                 addToCart(lesson) {
