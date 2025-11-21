@@ -189,15 +189,15 @@
                     const lessons = [...this.filteredLessons]; // this takes filtered + sorted list
                     
                     lessons.sort((a, b) => {
-                        let aVal = a[this.sortAttribute];
-                        let bVal = b[this.sortAttribute];
+                        let aVal = a[this.sortAttributes];
+                        let bVal = b[this.sortAttributes];
                         
                         if (typeof aVal === 'string') {
                             aVal = aVal.toLowerCase();
                             bVal = bVal.toLowerCase();
                         }
                         
-                        if (this.sortOrder === 'asc') {
+                        if (this.sortOrders === 'asc') {
                             return aVal > bVal ? 1 : -1;
                         } else {
                             return aVal < bVal ? 1 : -1;
