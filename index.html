@@ -79,7 +79,42 @@
                     <i class="fas fa-trash"></i> Remove
                 </button>
             </div>
+            
+            <div class="checkout-section">
+                <h3>Checkout</h3>
+                    <div class="form-group">
+                        <label>Full Name (letters only):</label>
+                        <input v-model="order.customerName" type="text" placeholder="Enter your name">
+                        <label>Phone Number (numbers only):</label>
+                        <input v-model="order.customerPhone" type="text" placeholder="Enter your phone number">
+                    
+                        <label>Address:</label>
+                        <input v-model="order.address" type="text" placeholder="Enter your address">
+                    
+                        <label>City:</label>
+                        <input v-model="order.city" type="text" placeholder="Enter city">
+
+                        <label>Emirate:</label>
+                        <select v-model="order.emirate">
+                            <option disabled value="">Select Emirate</option>
+                            <option>Dubai</option>
+                            <option>Abu Dhabi</option>
+                            <option>Sharjah</option>
+                            <option>Fujairah</option>
+                        </select>
+                    
+                        <label>Postal Code:</label>
+                        <input v-model="order.zip" type="text" placeholder="Enter postal code">
+                    
+                        <div>
+                            <input type="checkbox" id="gift" v-model="order.gift">
+                            <label for="gift" style="display: inline;">Ship As Gift?</label>
+                        </div>
+                    </div>
+            </div>
         </div>
+
+
 
             
     </div>
@@ -105,7 +140,16 @@
                 showCart: false,
                 searchQuery: '',
                 sortAttributes: 'subject', // will sort by 'subject' by default
-                sortOrders: 'asc', //will sort by ascending by default 
+                sortOrders: 'asc', //will sort by ascending by default
+                order: {
+                    customerName: '',
+                    customerPhone: '',
+                    address: '',
+                    city: '',
+                    zip: '',
+                    emirate: '',
+                    gift: false
+                },
             },
             computed:{
                 sortedLessons() {
