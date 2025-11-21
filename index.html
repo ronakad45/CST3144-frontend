@@ -86,7 +86,7 @@
                         <i class="fas fa-trash"></i> Remove
                     </button>
                 </div>
-                
+
                 <div class="total-amount">
                     Total: AED {{totalPrice}}
                 </div>
@@ -123,6 +123,24 @@
                             <button class="checkout-btn" v-on:click="checkout":disabled="!isCheckoutEnabled">
                                 <i class="fas fa-check-circle"></i> Complete Order
                             </button>
+                        </div>
+                    </div>
+                </div>
+                <div v-if="orderConfirmed" class="confirmation-message">
+                    <i class="fas fa-check-circle" style="font-size: 40px; margin-bottom: 15px;"></i>
+                    <h2>Order Successfully Submitted!</h2>
+                    <p>Thank you for your purchase!</p>
+                    
+                    <div class="order-summary">
+                        <h3>Order Information</h3>
+                        
+                        <h4 style="margin-top: 15px;">Items Ordered:</h4>
+                        <div v-for="item in confirmedCart" :key="item.id" class="order-item">
+                            {{ item.subject }} - {{ item.location }} (Qty: {{ item.quantity }}) - AED {{ item.price * item.quantity }}
+                        </div>
+                        
+                        <div style="border-top: 2px solid #ddd; margin-top: 10px; padding-top: 10px; font-size: 18px;">
+                            <strong>Total: AED {{ confirmedTotal }}</strong>
                         </div>
                     </div>
                 </div>
@@ -201,6 +219,12 @@
                                lesson.price.toString().includes(query) ||
                                lesson.spaces.toString().includes(query);
                     });
+                },
+                cartItemCount() {
+                    return this.cart.reduce((total, item) => total + item.quantity, 0);
+                },
+                totalPrice() {
+                    return this.cart.reduce((total, item) => total + (item.price * item.quantity), 0);
                 },
                 isNameValid() {
                     return /^[A-Za-z\s]+$/.test(this.order.customerName) && this.order.customerName.trim().length > 0;

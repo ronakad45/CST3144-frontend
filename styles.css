@@ -158,7 +158,7 @@ select {
     display: flex;
     justify-content: space-between;
     padding: 15px;
-    border-bottom: 1px solid #eee;
+    
 }
 
 .remove-btn {
@@ -206,8 +206,33 @@ select {
 
 .total-amount {
     font-size: 20px;
-    color: #4CAF50;
+    color: #196c1c;
     font-weight: bold;
     margin: 15px 0;
     text-align: right;
+}
+
+.confirmation-message {
+    background: #4CAF50;
+    color: white;
+    padding: 20px;
+    margin-top: 20px;
+}
+
+.order-summary {
+    background: white;
+    color: #333;
+    padding: 15px;
+    margin-top: 15px;
+}
+
+.order-item {
+    padding: 8px;
+    border-bottom: 1px solid #eee;
+}
+
+.empty-cart {
+    text-align: center;
+    padding: 40px;
+    color: #999;
 }
