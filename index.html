@@ -142,7 +142,12 @@
                         <div style="border-top: 2px solid #ddd; margin-top: 10px; padding-top: 10px; font-size: 18px;">
                             <strong>Total: AED {{ confirmedTotal }}</strong>
                         </div>
+
                     </div>
+                    <button class="checkout-btn" v-on:click="startNewOrder" style="margin-top: 15px;">
+                            <i class="fas fa-home"></i> Continue Shopping
+                    </button>
+
                 </div>
             </div>
         </div>
@@ -282,6 +287,24 @@
                         this.orderConfirmed = true;
                     }
                 },
+                startNewOrder() {
+                    this.cart = [];
+                    this.confirmedCart = [];
+                    this.confirmedTotal = 0;
+                    this.order = {
+                        customerName: '',
+                        customerPhone: '',
+                        address: '',
+                        city: '',
+                        zip: '',
+                        emirate: '',
+                        gift: false,
+                    };
+                    this.confirmedOrder = {};
+                    this.orderConfirmed = false;
+                    this.showCart = false;
+                }
+
             }
         });
     </script>
