@@ -293,12 +293,11 @@
                 this.showCart = !this.showCart;
             },
             async checkout() {
-                if (this.isCheckoutEnabled || this.submittingOrder) {
+                if (!this.isCheckoutEnabled || this.submittingOrder) {
                     return;
                 }
                 try{
                     this.submittingOrder = true;
-                    this.error='';
 
                     const orderData = {
                         customerName: this.order.customerName,
