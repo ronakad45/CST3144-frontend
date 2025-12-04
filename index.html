@@ -40,7 +40,7 @@
                 </select>
             </div>
             <div class="lessons-grid">
-                <div v-for="lesson in sortedLessons" :key="lesson.id" class="lesson-card">
+                <div v-for="lesson in sortedLessons" :key="lesson._id" class="lesson-card">
                     <div class="lesson-icon">
                         <i :class="lesson.icon"></i>
                     </div>
@@ -76,7 +76,7 @@
             </div>
 
             <div v-else>
-                <div v-for="item in cart" :key="item.id" class="cart-item">
+                <div v-for="item in cart" :key="item._id" class="cart-item">
                     <div class="cart-item-info">
                         <h4>{{ item.subject }}</h4>
                         <p>{{ item.location }} - AED {{ item.price }}</p>
@@ -120,10 +120,11 @@
                                 <input type="checkbox" id="gift" v-model="order.gift">
                                 <label for="gift" style="display: inline;">Ship As Gift?</label>
                             </div>
-                            <button class="checkout-btn" v-on:click="checkout":disabled="!isCheckoutEnabled">
-                                <i class="fas fa-check-circle"></i> Complete Order
-                            </button>
                         </div>
+                        <button class="checkout-btn" v-on:click="checkout":disabled="!isCheckoutEnabled || submittingOrder">
+                            <i class="fas fa-check-circle"></i> 
+                            {{submittingOrder ? 'Processing...' : 'Complete Order'}}
+                        </button>
                     </div>
                 </div>
                 <div v-if="orderConfirmed" class="confirmation-message">
@@ -135,7 +136,7 @@
                         <h3>Order Information</h3>
                         
                         <h4 style="margin-top: 15px;">Items Ordered:</h4>
-                        <div v-for="item in confirmedCart" :key="item.id" class="order-item">
+                        <div v-for="item in confirmedCart" :key="item._id" class="order-item">
                             {{ item.subject }} - {{ item.location }} (Qty: {{ item.quantity }}) - AED {{ item.price * item.quantity }}
                         </div>
                         
@@ -145,168 +146,253 @@
 
                     </div>
                     <button class="checkout-btn" v-on:click="startNewOrder" style="margin-top: 15px;">
-                            <i class="fas fa-home"></i> Continue Shopping
+                        <i class="fas fa-home"></i> Continue Shopping
                     </button>
 
                 </div>
             </div>
         </div>
     </div>
+    <script>
+    let afterSchool = new Vue({
+        el: '#app',
+        data: {
+            sitename: "After School lessons ",
+            lessons: [],
+            cart: [],
+            showCart: false,
+            searchQuery: '',
+            sortAttributes: 'subject', // will sort by 'subject' by default
+            sortOrders: 'asc', //will sort by ascending by default
+            order: {
+                customerName: '',
+                customerPhone: '',
+                address: '',
+                city: '',
+                zip: '',
+                emirate: '',
+                gift: false
+            },
+            orderConfirmed: false,
+            confirmedOrder: {},
+            confirmedCart: [],
+            confirmedTotal: 0,
+            submittingOrder: false
+        },
+        mounted(){
+            this.fetchLessons();
+        },
+        computed:{
+            sortedLessons() {
+                const lessons = [...this.filteredLessons]; // this takes filtered + sorted list
+                
+                lessons.sort((a, b) => {
+                    let aVal = a[this.sortAttributes];
+                    let bVal = b[this.sortAttributes];
+                    
+                    if (typeof aVal === 'string') {
+                        aVal = aVal.toLowerCase();
+                        bVal = bVal.toLowerCase();
+                    }
+                    
+                    if (this.sortOrders === 'asc') {
+                        return aVal > bVal ? 1 : -1;
+                    } else {
+                        return aVal < bVal ? 1 : -1;
+                    }
+                });
+            
+                return lessons;
+            },
+            filteredLessons() {
+            // It returns sorted lessons array 
+            //implements it in the search and filters lessons based on searchQuery
+                if (!this.searchQuery) {
+                    return this.lessons;
+                }
+                const query = this.searchQuery.toLowerCase();
+                return this.lessons.filter(lesson => {
+                    return lesson.subject.toLowerCase().includes(query) ||
+                            lesson.location.toLowerCase().includes(query) ||
+                            lesson.price.toString().includes(query) ||
+                            lesson.spaces.toString().includes(query);
+                });
+            },
+            cartItemCount() {
+                return this.cart.reduce((total, item) => total + item.quantity, 0);
+            },
+            totalPrice() {
+                return this.cart.reduce((total, item) => total + (item.price * item.quantity), 0);
+            },
+            isNameValid() {
+                return /^[A-Za-z\s]+$/.test(this.order.customerName) && this.order.customerName.trim().length > 0;
+            },
+            isPhoneValid() {
+                return /^[0-9]+$/.test(this.order.customerPhone) && this.order.customerPhone.length > 0;
+            },
+            isCheckoutEnabled() {
+                return this.isNameValid && 
+                        this.isPhoneValid && 
+                        this.order.address.trim() && 
+                        this.order.city.trim() && 
+                        this.order.emirate && 
+                        this.order.zip.trim() && 
+                        this.cart.length > 0;
+            }
+        },
+        methods: {
+            //fetch all lessons from backend
+            async fetchLessons(){
+                try {
+                    const response = await fetch('https://cst3144-ronak-after-school-backend-1.onrender.com/lessons', {
+                        method: 'GET',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                    });
+                    if (!response.ok) {
+                        throw new Error('Failed to fetch lessons');
+                    }
+                    this.lessons = await response.json();
+                    console.log('Lessons loaded:', this.lessons.length);
+                } catch (error) {
+                    console.error('Error fetching lessons:', error);
+                    this.error = 'Failed to load lessons. Please refresh the page.';
+                }
+                
+            },
+            addToCart(lesson) {
+                if (lesson.spaces > 0) {
+                    const cartItem = this.cart.find(item => item._id === lesson._id);
+                    if (cartItem) {
+                        cartItem.quantity++;
+                    } else {
+                        this.cart.push({
+                            _id: lesson._id,
+                            subject: lesson.subject,
+                            location: lesson.location,
+                            price: lesson.price,
+                            quantity: 1
+                        });
+                    }
+                    
+                    lesson.spaces--;
+                }
+            },
+            removeFromCart(item) {
+                const lesson = this.lessons.find(l => l._id === item._id);
+                if (lesson) {
+                    lesson.spaces += item.quantity;
+                }
+                const index = this.cart.findIndex(i => i._id === item._id);
+                if (index > -1) {
+                    this.cart.splice(index, 1);
+                }
+            },
+            changePages() {
+                this.showCart = !this.showCart;
+            },
+            async checkout() {
+                if (this.isCheckoutEnabled || this.submittingOrder) {
+                    return;
+                }
+                try{
+                    this.submittingOrder = true;
+                    this.error='';
 
-     <script>
-        let afterSchool = new Vue({
-            el: '#app',
-            data: {
-                sitename: "After School lessons ",
-                lessons: [
-                    { id: 1, subject: 'Mathematics', location: 'Dubai Knowledge Park', price: 100, spaces: 5, rating: 4, icon: 'fas fa-calculator' },
-                    { id: 2, subject: 'Sports', location: 'Dubai Marina', price: 80, spaces: 5, rating: 5, icon: 'fas fa-futbol' },
-                    { id: 3, subject: 'Martial Arts', location: 'Jumeirah', price: 90, spaces: 5, rating: 4, icon: 'fas fa-hand-rock' },
-                    { id: 4, subject: 'History', location: 'Business Bay', price: 95, spaces: 5, rating: 3, icon: 'fas fa-landmark' },
-                    { id: 5, subject: 'Cooking', location: 'Al Quoz', price: 85, spaces: 5, rating: 5, icon: 'fas fa-utensils' },
-                    { id: 6, subject: 'Art', location: 'Dubai Marina', price: 75, spaces: 5, rating: 4, icon: 'fas fa-palette' },
-                    { id: 7, subject: 'Music', location: 'Academic City', price: 110, spaces: 5, rating: 5, icon: 'fas fa-music' },
-                    { id: 8, subject: 'Physical Education', location: 'Silicon Oasis', price: 70, spaces: 5, rating: 3, icon: 'fas fa-running' },
-                    { id: 9, subject: 'Computer Science', location: 'Sharjah', price: 120, spaces: 5, rating: 4, icon: 'fas fa-laptop-code' },
-                    { id: 10, subject: 'French', location: 'Fujairah', price: 90, spaces: 5, rating: 4, icon: 'fas fa-language' }
-                ],
-                cart: [],
-                showCart: false,
-                searchQuery: '',
-                sortAttributes: 'subject', // will sort by 'subject' by default
-                sortOrders: 'asc', //will sort by ascending by default
-                order: {
+                    const orderData = {
+                        customerName: this.order.customerName,
+                        customerPhone: this.order.customerPhone,
+                        address: this.order.address,
+                        city: this.order.city,
+                        emirate: this.order.emirate,
+                        zip: this.order.zip,
+                        gift: this.order.gift,
+                        items: this.cart,
+                        totalAmount: this.totalPrice
+                    };
+
+                    //save order
+                    const saveOrderResp = await fetch('https://cst3144-ronak-after-school-backend-1.onrender.com/orders', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify(orderData)
+                    });
+
+                    if (!saveOrderResp.ok){
+                        throw new Error('Failed to submit order');
+                    }
+
+                    const orderResult = await saveOrderResp.json();
+                    console.log('Order Submitted:', orderResult);
+                    // Update lesson spaces in backend
+                    for (let item of this.cart) {
+                        const lesson = this.lessons.find(l => l._id === item._id);
+                        if (lesson) {
+                            await this.updateLessonSpaces(item._id, lesson.spaces);
+                        }
+                    }
+
+                    //show confirmation
+                    this.confirmedOrder = JSON.parse(JSON.stringify(this.order));
+                    this.confirmedCart = JSON.parse(JSON.stringify(this.cart));
+                    this.confirmedTotal = this.totalPrice;
+                    this.orderId = orderResult.orderId;
+                    this.orderConfirmed = true;
+
+                }catch (error){
+                    console.error('Error during Checkout:', error);
+                    this.error = 'Failed to submit order. Please try again';
+                }finally{
+                    this.submittingOrder = false;
+                }
+            },
+            
+            async updateLessonSpaces(lessonId, newSpaces) {
+                try {
+                    const response = await fetch(`https://cst3144-ronak-after-school-backend-1.onrender.com/lessons/${lessonId}`, {
+                        method: 'PUT',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({ spaces: newSpaces })
+                    });
+                    
+                    if (!response.ok) {
+                        throw new Error('Failed to update lesson spaces');
+                    }
+                    
+                    const result = await response.json();
+                    console.log('Lesson updated:', result);
+                } catch (error) {
+                    console.error('Error updating lesson:', error);
+                }
+            },
+            startNewOrder() {
+                this.cart = [];
+                this.confirmedCart = [];
+                this.confirmedTotal = 0;
+                this.order = {
                     customerName: '',
                     customerPhone: '',
                     address: '',
                     city: '',
                     zip: '',
                     emirate: '',
-                    gift: false
-                },
-                orderConfirmed: false,
-                confirmedOrder: {},
-                confirmedCart: [],
-                confirmedTotal: 0
-            },
-            computed:{
-                sortedLessons() {
-                    const lessons = [...this.filteredLessons]; // this takes filtered + sorted list
-                    
-                    lessons.sort((a, b) => {
-                        let aVal = a[this.sortAttributes];
-                        let bVal = b[this.sortAttributes];
-                        
-                        if (typeof aVal === 'string') {
-                            aVal = aVal.toLowerCase();
-                            bVal = bVal.toLowerCase();
-                        }
-                        
-                        if (this.sortOrders === 'asc') {
-                            return aVal > bVal ? 1 : -1;
-                        } else {
-                            return aVal < bVal ? 1 : -1;
-                        }
-                    });
-                
-                    return lessons;
-                },
-                filteredLessons() {
-                // It returns sorted lessons array 
-                //implements it in the search and filters lessons based on searchQuery
-                    if (!this.searchQuery) {
-                        return this.lessons;
-                    }
-                    const query = this.searchQuery.toLowerCase();
-                    return this.lessons.filter(lesson => {
-                        return lesson.subject.toLowerCase().includes(query) ||
-                               lesson.location.toLowerCase().includes(query) ||
-                               lesson.price.toString().includes(query) ||
-                               lesson.spaces.toString().includes(query);
-                    });
-                },
-                cartItemCount() {
-                    return this.cart.reduce((total, item) => total + item.quantity, 0);
-                },
-                totalPrice() {
-                    return this.cart.reduce((total, item) => total + (item.price * item.quantity), 0);
-                },
-                isNameValid() {
-                    return /^[A-Za-z\s]+$/.test(this.order.customerName) && this.order.customerName.trim().length > 0;
-                },
-                isPhoneValid() {
-                    return /^[0-9]+$/.test(this.order.customerPhone) && this.order.customerPhone.length > 0;
-                },
-                isCheckoutEnabled() {
-                    return this.isNameValid && 
-                           this.isPhoneValid && 
-                           this.order.address.trim() && 
-                           this.order.city.trim() && 
-                           this.order.emirate && 
-                           this.order.zip.trim() && 
-                           this.cart.length > 0;
-                }
-            },
-            methods: {
-                addToCart(lesson) {
-                    if (lesson.spaces > 0) {
-                        const cartItem = this.cart.find(item => item.id === lesson.id);
-                        if (cartItem) {
-                            cartItem.quantity++;
-                        } else {
-                            this.cart.push({
-                                id: lesson.id,
-                                subject: lesson.subject,
-                                location: lesson.location,
-                                price: lesson.price,
-                                quantity: 1
-                            });
-                        }
-                        
-                        lesson.spaces--;
-                    }
-                },
-                removeFromCart(item) {
-                    const lesson = this.lessons.find(l => l.id === item.id);
-                    if (lesson) {
-                        lesson.spaces += item.quantity;
-                    }
-                    const index = this.cart.findIndex(i => i.id === item.id);
-                    if (index > -1) {
-                        this.cart.splice(index, 1);
-                    }
-                },
-                changePages() {
-                    this.showCart = !this.showCart;
-                },
-                checkout() {
-                    if (this.isCheckoutEnabled) {
-                        this.confirmedOrder = JSON.parse(JSON.stringify(this.order));
-                        this.confirmedCart = JSON.parse(JSON.stringify(this.cart));
-                        this.confirmedTotal = this.totalPrice;
-                        this.orderConfirmed = true;
-                    }
-                },
-                startNewOrder() {
-                    this.cart = [];
-                    this.confirmedCart = [];
-                    this.confirmedTotal = 0;
-                    this.order = {
-                        customerName: '',
-                        customerPhone: '',
-                        address: '',
-                        city: '',
-                        zip: '',
-                        emirate: '',
-                        gift: false,
-                    };
-                    this.confirmedOrder = {};
-                    this.orderConfirmed = false;
-                    this.showCart = false;
-                }
+                    gift: false,
+                };
+                this.confirmedOrder = {};
+                this.orderConfirmed = false;
+                this.orderId = '';
+                this.showCart = false;
 
+                //reload lessons to get updated spaces
+                this.fetchLessons();
             }
-        });
-    </script>
+        }
+    });
+</script>
 </body>
 </html>
