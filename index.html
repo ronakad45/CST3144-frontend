@@ -14,7 +14,7 @@
             <h1><i class="fas fa-graduation-cap"></i> After School Lessons</h1>
             <div class="header-controls">
                 <input v-model="searchQuery" type="text" placeholder="Search lessons." class="search-box">
-                <button class="cart-button" v-on:click="changePages" :disabled="cart.length === 0">
+                <button class="cart-button" v-on:click="changePages" :disabled="cart.length === 0 && !showCart">
                     <i class="fas fa-shopping-cart"></i>
                     Cart
                     <span v-if="cart.length > 0" class="cart-badge">{{ cartItemCount }}</span>
@@ -184,7 +184,7 @@
         },
         computed:{
             sortedLessons() {
-                const lessons = [...this.filteredLessons]; // this takes filtered + sorted list
+                const lessons = [...this.lessons]; // this takes filtered + sorted list
                 
                 lessons.sort((a, b) => {
                     let aVal = a[this.sortAttributes];
@@ -204,20 +204,7 @@
             
                 return lessons;
             },
-            filteredLessons() {
-            // It returns sorted lessons array 
-            //implements it in the search and filters lessons based on searchQuery
-                if (!this.searchQuery) {
-                    return this.lessons;
-                }
-                const query = this.searchQuery.toLowerCase();
-                return this.lessons.filter(lesson => {
-                    return lesson.subject.toLowerCase().includes(query) ||
-                            lesson.location.toLowerCase().includes(query) ||
-                            lesson.price.toString().includes(query) ||
-                            lesson.spaces.toString().includes(query);
-                });
-            },
+
             cartItemCount() {
                 return this.cart.reduce((total, item) => total + item.quantity, 0);
             },
@@ -240,26 +227,43 @@
                         this.cart.length > 0;
             }
         },
+        watch:{
+            searchQuery(newQuery){
+                this.fetchLessons(newQuery);
+            }
+        },
+        
         methods: {
             //fetch all lessons from backend
-            async fetchLessons(){
+            async fetchLessons(query = '') {
                 try {
-                    const response = await fetch('https://cst3144-ronak-after-school-backend-1.onrender.com/lessons', {
+                    let url = 'https://cst3144-ronak-after-school-backend-1.onrender.com';
+
+                    // If statement if there is a search query, call /search, otherwise call /lessons
+                    if (query && query.trim() !== '') {
+                        const encoded = encodeURIComponent(query.trim());
+                        url += `/search?q=${encoded}`;
+                    } else {
+                        url += '/lessons';
+                    }
+
+                    const response = await fetch(url, {
                         method: 'GET',
                         headers: {
                             'Content-Type': 'application/json'
                         },
                     });
+
                     if (!response.ok) {
                         throw new Error('Failed to fetch lessons');
                     }
+
                     this.lessons = await response.json();
                     console.log('Lessons loaded:', this.lessons.length);
                 } catch (error) {
                     console.error('Error fetching lessons:', error);
                     this.error = 'Failed to load lessons. Please refresh the page.';
                 }
-                
             },
             addToCart(lesson) {
                 if (lesson.spaces > 0) {
